@@ -1,0 +1,24 @@
+# Bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+.venv/
+venv/
+
+# Data and generated artifacts (not committed)
+data/
+artifacts/
+*.onnx
+*.pt
+*.csv
+*.json
+.env
+
+# OS
+.DS_Store
+Thumbs.db
