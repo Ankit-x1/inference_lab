@@ -118,7 +118,7 @@ uv add --dev pytest ruff
 Create the empty GitHub repository, then connect it:
 
 ```powershell
-git remote add origin https://github.com/YOUR_USERNAME/edge-vision-inference.git
+git remote add origin https://github.com/Ankit-x1/inference_lab.git
 ```
 
 ### `.gitignore`
