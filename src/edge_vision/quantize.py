@@ -7,14 +7,22 @@ The FP32 model is never overwritten.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Tuple
-
 import numpy as np
 import onnxruntime as ort
-from onnxruntime.quantization import QuantFormat, QuantType, quantize_static
+from onnxruntime.quantization import (
+    CalibrationMethod,
+    QuantFormat,
+    QuantType,
+    quantize_static,
+)
 
 from .data import DataConfig, collect_numpy, load_cifar10
+
+
+_CALIBRATION_METHODS = {
+    "MinMax": CalibrationMethod.MinMax,
+    "Percentile": CalibrationMethod.Percentile,
+}
 
 
 class CalibrationReader:
@@ -43,7 +51,7 @@ def quantize_model(
     calibration_images: np.ndarray,
     input_name: str = "input",
     calibrate_method: str = "MinMax",
-) -> Tuple[str, dict]:
+) -> tuple[str, dict]:
     """Run static INT8 quantization and return (int8_path, config_record).
 
     Config record documents activation/weight types, quantization format,
@@ -56,6 +64,10 @@ def quantize_model(
 
     reader = CalibrationReader(calibration_images, input_name)
 
+    calibrate_method_enum = _CALIBRATION_METHODS.get(
+        calibrate_method, CalibrationMethod.MinMax
+    )
+
     quantize_static(
         model_input=fp32_onnx,
         model_output=int8_onnx,
@@ -63,7 +75,7 @@ def quantize_model(
         quant_format=QuantFormat.QOperator,
         weight_type=QuantType.QUInt8,
         activation_type=QuantType.QUInt8,
-        calibrate_method=calibrate_method,
+        calibrate_method=calibrate_method_enum,
     )
 
     config_record = {
@@ -71,7 +83,7 @@ def quantize_model(
         "int8_model": int8_onnx,
         "quantization_method": "post_training_static",
         "calibration_method": calibrate_method,
-        "calibration_samples": int(len(calibration_images)),
+        "calibration_samples": len(calibration_images),
         "calibration_source": "train_split",
         "quant_format": "QOperator",
         "weight_type": "QUInt8",
@@ -82,7 +94,9 @@ def quantize_model(
     return int8_onnx, config_record
 
 
-def load_calibration_images(cfg: DataConfig, n_samples: int = 512) -> np.ndarray:
+def load_calibration_images(
+    cfg: DataConfig, n_samples: int = 512
+) -> np.ndarray:
     """Build a fixed calibration subset from the training split."""
     train_loader, _, _ = load_cifar10(cfg)
     images, _ = collect_numpy(train_loader, n_samples)
