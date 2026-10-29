@@ -12,8 +12,7 @@ venv/
 
 # Data and generated artifacts (not committed)
 data/
-artifacts/
-*.onnx
+artifacts/*.json
 *.pt
 *.csv
 *.json
